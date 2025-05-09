@@ -1,0 +1,27 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="row">
+    <div class="col-sm-12 col-md-4">
+        <p> Общая дистаницая: {{ distance }} км.</p>
+
+        {% for place in places %}
+            <p>
+            {{ loop.index }}: {{ place }}
+            </p>
+        {% endfor %}
+        
+        
+    
+        {% if current_user.is_authenticated %}
+            <a href="resultPath/savePlace" class="btn btn-success"> Сохранить маршрут </a> <br><br>
+        {% endif %}
+        <a href="resultPath/savePlacePDF" class="btn btn-success"> Сохранить маршрут в формате PDF</a>
+    
+    </div>
+    <div class="col-sm-12 col-md-8">
+        <img src="data:image/jpeg;base64,{{ image_bytes }}" alt="Изображение" style="float: left; margin-right: 10px;">
+        <a href="/" class="btn btn-warning"> Вернуться на главуню страницу (текущий путь будет удален) </a>
+    </div>
+</div>
+{% endblock %}

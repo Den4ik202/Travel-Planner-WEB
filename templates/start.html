@@ -1,0 +1,20 @@
+{% extends "base.html" %}
+
+{% block content %}
+<form method="POST">
+    <div class="form-check form-switch">
+        <input class="form-check-input" type="checkbox" role="switch" id="flexSwitchCheckDefault" name="swith_light">
+        <label class="form-check-label" for="flexSwitchCheckDefault">Темная/светлая растветка</label>
+        <button type="submit" class="btn btn-primary">Применить</button>
+    </div>
+</form>
+
+<div class="container">
+    <h1 class="text-center">Ваш умный помощник для построение туристических маршрутов</h1>
+    <p> При помощи данного помощника вы можете найти интересующие вам места и посторить маршрут через эти места</p>
+    <a href="findPlace" class="btn btn-success"> Найти места </a>
+    {% if current_user.is_authenticated %}
+        <a href="showPlaces" class="btn btn-secondary"> Показать мои маршруты </a> 
+    {% endif %}
+</div>  
+{% endblock %}

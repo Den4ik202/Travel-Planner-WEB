@@ -1,0 +1,21 @@
+.form-switch .form-check-input {
+    width: 3em; /* Adjust as needed */
+    margin-left: -2.5em;
+    background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='-4 -4 8 8'%3e%3ccircle r='3' fill='%23fff'/%3e%3c/svg%3e");
+    background-position: left center;
+    border-radius: 2em;
+    transition: background-position .15s ease-in-out; /* Smooth transition */
+}
+
+.form-switch .form-check-input:focus {
+    border-color: #86b7fe; /* Bootstrap focus color */
+    outline: 0;
+    box-shadow: 0 0 0 0.25rem rgba(13,110,253,.25); /* Bootstrap focus shadow */
+}
+
+.form-switch .form-check-input:checked {
+    background-position: right center;
+    background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='-4 -4 8 8'%3e%3ccircle r='3' fill='%23fff'/%3e%3c/svg%3e");
+    background-color: #198754; /* Bootstrap success color (adjust to preference) */
+    border-color: #198754;
+}

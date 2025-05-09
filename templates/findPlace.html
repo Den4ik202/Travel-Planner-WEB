@@ -1,0 +1,45 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="row">
+    <div class="col-sm-12 col-md-4">
+        <h1>Построение пути</h1>
+
+        <form method="POST">
+            <label for="place_adress">Введите адрес или название места:</label>
+            <input type="text" id="place_adress" name="place_adress">
+            <button type="submit" class="btn btn-secondary">Найти</button>
+            <a href="resultPath" class="btn btn-success"> Построить маршурт </a>
+        </form>
+    
+        {% if places %}
+            <h2>Текущий путь:</h2>
+            <ul>
+                {% for item in places %}    
+                    <p>
+                        {{ loop.index }}: {{ item }} <br>
+                        <a href="findPlace/place/delete/{{ loop.index }}" class="btn btn-danger"> Удалить </a>
+                        <a href="findPlace/place/up/{{ loop.index }}" class="btn btn-primary"> Переместить наверх </a>
+                        <a href="findPlace/place/down/{{ loop.index }}" class="btn btn-primary"> Переместить вниз </a>
+                    </p>
+                {% endfor %}
+            </ul>
+        {% endif %}
+    </div>
+        <div class="col-sm-12 col-md-8">
+            {% if image_bytes%}
+                <img src="data:image/jpeg;base64,{{ image_bytes }}" alt="Изображение" style="float: left; margin-right: 10px;">
+            {% elif not error %}
+            <p> Здесь будет появляться изображение вашего места</p>
+                {% endif %}
+
+        {% if error %}
+            <p> Место не нашлось. Проверьте правильность введенного адреса</p>
+        {% endif %}
+
+        
+        <a href="/" class="btn btn-warning"> Вернуться на главуню страницу (текущий путь будет удален) </a>
+        </div>
+  </div>
+
+{% endblock %}

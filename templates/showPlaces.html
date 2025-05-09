@@ -1,0 +1,22 @@
+{% extends "base.html" %}
+
+{% block content %}
+ <h1 class="text-center">Ваши сохраненные маршруты:</h1>
+
+{% for rout in routs_list %}
+    <h1> Путь № {{ loop.index }}</h1>
+    <div class="row">
+        <div class="col-sm-12 col-md-4">
+            <p> Расстояние: {{ rout['distance'] }}</p>
+            <p> Путь: </p>
+            {% for adress in rout['full_adress_places'].split('/') %}
+                <p> {{ adress }}</p>
+            {% endfor %}
+        </div>
+    <div class="col-sm-12 col-md-8">
+        <img src="data:image/jpeg;base64,{{ rout['enicoding_image'] }}" alt="Изображение" style="float: left; margin-right: 10px;">
+    </div>
+  </div>
+{% endfor %}
+
+{% endblock %}
