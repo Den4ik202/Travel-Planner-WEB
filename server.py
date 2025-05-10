@@ -1,7 +1,5 @@
 from flask_login import LoginManager, login_user, login_required, logout_user, current_user
 from flask import Flask, render_template, redirect, make_response, jsonify, request, send_file
-from sqlalchemy import literal
-from requests import get, post, put, delete
 from flask_restful import Api
 import base64
 import io
@@ -381,5 +379,4 @@ if __name__ == '__main__':
     api.add_resource(routs_resource.RoutsResource, '/api/routs/<int:rout_id>')
 
     load_dotenv()
-    port = int(os.environ.get("PORT", 5000))  # Используем переменную окружения PORT или 5000
-    app.run(port=port, host='0.0.0.0', debug=True)
+    app.run(port=8080, host='0.0.0.0', debug=True)
