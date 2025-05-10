@@ -379,4 +379,4 @@ if __name__ == '__main__':
     api.add_resource(routs_resource.RoutsResource, '/api/routs/<int:rout_id>')
 
     load_dotenv()
-    app.run(port=8080, host='0.0.0.0', debug=True)
+    app.run()
