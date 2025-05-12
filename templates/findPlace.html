@@ -27,16 +27,16 @@
         {% endif %}
     </div>
         <div class="col-sm-12 col-md-8">
+
+        {% if not error %}
             {% if image_bytes%}
-                <img src="data:image/jpeg;base64,{{ image_bytes }}" alt="Изображение" style="float: left; margin-right: 10px;">
-            {% elif not error %}
-            <p> Здесь будет появляться изображение вашего места</p>
-                {% endif %}
-
-        {% if error %}
-            <p> Место не нашлось. Проверьте правильность введенного адреса</p>
+                    <img src="data:image/jpeg;base64,{{ image_bytes }}" alt="Изображение" style="float: left; margin-right: 10px;">
+                {% elif not error %}
+                <p> Здесь будет появляться изображение вашего места</p>
+                    {% endif %}
+        {% else %}
+            <p> {{ error }}</p>
         {% endif %}
-
         
         <a href="/" class="btn btn-warning"> Вернуться на главуню страницу (текущий путь будет удален) </a>
         </div>

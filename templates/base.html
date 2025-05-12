@@ -7,14 +7,15 @@
 </head>
 <body>
     {% if current_user.is_authenticated %}
-    <a class="navbar-brand" href="/logout">{{ current_user.name }}</a>
+    <!-- <a class="navbar-brand" href="/logout">{{ current_user.name }}</a> -->
+    <p>{{ current_user.name }}</p> <a class="btn btn-danger" href="/logout">Выйти</a>
     <br>
     {% else %}
     <p>
         <a style="font-size: 1.2rem;">Регестрация/вход</a>
         <a class="btn btn-primary" href="/register">Зарегистрироваться</a>
-        <a class="btn btn-success" href="/login">Войти</a>
-        <a style="font-size: 1.2rem; text-align: right;">Dens</a>
+        <a class="btn btn-success" href="/login">Войти</a> 
+        <a style="font-size: 1.2rem; text-align: right;">Travel Planner WEB</a>
     </p>
     {% endif %}
 

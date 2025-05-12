@@ -1,11 +1,12 @@
 from flask_login import LoginManager, login_user, login_required, logout_user, current_user
-from flask import Flask, render_template, redirect, make_response, jsonify, request, send_file
+from flask import Flask, render_template, redirect, make_response, jsonify, request, send_file, session
 from flask_restful import Api
 import base64
 import io
 import os
 import tempfile
 import time
+import uuid
 from PIL import Image
 from reportlab.pdfgen import canvas
 from reportlab.lib.pagesizes import letter
@@ -28,16 +29,20 @@ app.config['SECRET_KEY'] = 'TravelPlannerWEB'
 api = Api(app)
 login_manager = LoginManager()
 login_manager.init_app(app)
-all_places_position = []
+id_sessions = {}
 session_flask = {}
 theme = 'dark'
 
 
 @app.route('/', methods=['GET', 'POST'])
 def index():
-    global all_places_position, session_flask, theme
-    all_places_position = []
-    session_flask = {}
+    global session_flask, theme
+
+    if 'user_id' not in session:
+        session['user_id'] = str(uuid.uuid4())
+
+    user_id = session['user_id']
+    session_flask[user_id] = {}
 
     if request.method == 'POST':
         theme = 'light' if 'swith_light' in request.form else 'dark'
@@ -49,8 +54,9 @@ def index():
 
 @app.route('/findPlace', methods=['GET', 'POST'])
 def findPlace():
+    user_id = session['user_id']
     image_bytes = ''
-    error = False
+    error = ''
     if request.method == 'POST':
         place_adress = request.form['place_adress']
         try:
@@ -61,12 +67,19 @@ def findPlace():
             image_bytes = get_place_image(position_palce, theme=theme)
             image_bytes = base64.b64encode(image_bytes).decode('utf-8')
 
-            all_places_position.append((position_palce, full_adress))
+            if 'place_coord' not in session_flask[user_id]:
+                session_flask[user_id]['place_coord'] = [
+                    (position_palce, full_adress)]
+            else:
+                session_flask[user_id]['place_coord'].append(
+                    (position_palce, full_adress))
+
         except Exception as _:
-            error = True
+            error = 'Место не нашлось. Проверьте правильность введенного адреса'
 
     return render_template('findPlace.html',
-                           places=[i[1] for i in all_places_position],
+                           places=[i[1] for i in session_flask[user_id].get(
+                               'place_coord', [])],
                            image_bytes=image_bytes,
                            error=error,
                            theme=theme)
@@ -75,9 +88,10 @@ def findPlace():
 
 @app.route('/findPlace/place/delete/<int:rout_id>')
 def deletePlace(rout_id: int):
-    global all_places_position
-
-    all_places_position.pop(rout_id - 1)
+    global session_flask
+    
+    user_id = session['user_id']
+    session_flask[user_id]['place_coord'].pop(rout_id - 1)
 
     return redirect("/findPlace")
 
@@ -86,11 +100,13 @@ def deletePlace(rout_id: int):
 
 @app.route('/findPlace/place/up/<int:rout_id>')
 def upPlace(rout_id: int):
-    global all_places_position
+    global session_flask
+    
+    user_id = session['user_id']
     if rout_id != 0:
         rout_id -= 1
-        all_places_position[rout_id], all_places_position[rout_id -
-                                                          1] = all_places_position[rout_id - 1], all_places_position[rout_id]
+        session_flask[user_id]['place_coord'][rout_id], session_flask[user_id]['place_coord'][rout_id -
+                                                                                              1] = session_flask[user_id]['place_coord'][rout_id - 1], session_flask[user_id]['place_coord'][rout_id]
 
     return redirect("/findPlace")
 
@@ -99,11 +115,13 @@ def upPlace(rout_id: int):
 
 @app.route('/findPlace/place/down/<int:rout_id>')
 def downPlace(rout_id: int):
-    global all_places_position
-    if rout_id != len(all_places_position):
+    global session_flask
+
+    user_id = session['user_id']
+    if rout_id != len(session_flask[user_id]['place_coord']):
         rout_id -= 1
-        all_places_position[rout_id], all_places_position[rout_id +
-                                                          1] = all_places_position[rout_id + 1], all_places_position[rout_id]
+        session_flask[user_id]['place_coord'][rout_id], session_flask[user_id]['place_coord'][rout_id +
+                                                                                              1] = session_flask[user_id]['place_coord'][rout_id + 1], session_flask[user_id]['place_coord'][rout_id]
 
     return redirect("/findPlace")
 
@@ -112,49 +130,59 @@ def downPlace(rout_id: int):
 
 @app.route('/resultPath')
 def findPath():
-    path, distance = get_route_coordinates([i[0] for i in all_places_position])
+    global session_flask
+    
+    user_id = session['user_id']
+    try:
+        path, distance = get_route_coordinates(
+            [i[0] for i in session_flask[user_id]['place_coord']])
 
-    image_bytes = get_travel_image(
-        path, [i[0] for i in all_places_position], theme=theme)
-    enicoding_image = base64.b64encode(image_bytes).decode('utf-8')
+        image_bytes = get_travel_image(
+            path, [i[0] for i in session_flask[user_id]['place_coord']], theme=theme)
+        enicoding_image = base64.b64encode(image_bytes).decode('utf-8')
 
-    session_flask['path'] = path
-    session_flask['distance'] = distance
-    session_flask['enicoding_image'] = enicoding_image
+        session_flask[user_id]['path'] = path
+        session_flask[user_id]['distance'] = distance
+        session_flask[user_id]['enicoding_image'] = enicoding_image
 
-    return render_template('resultPath.html',
-                           image_bytes=enicoding_image,
-                           distance=distance,
-                           places=[i[1] for i in all_places_position],
-                           theme=theme)
-
+        return render_template('resultPath.html',
+                               image_bytes=enicoding_image,
+                               distance=distance,
+                               places=[i[1]
+                                       for i in session_flask[user_id]['place_coord']],
+                               theme=theme)
+    except Exception as _:
+        return redirect("/findPlace")
 
 # сохранение пути
+
+
 @app.route('/resultPath/savePlace')
 @login_required
 def savePlace():
+    global session_flask
+
+    user_id = session['user_id']
     db_sess = db_session.create_session()
     user = db_sess.query(User).filter(
         User.name == current_user.name).first()
 
     path_places = []
-    for coord in session_flask['path']:
+    for coord in session_flask[user_id]['path']:
         path_places.append(str(coord[0]))
         path_places.append(str(coord[1]))
 
     coordinate_places = []
-    for coord, _ in all_places_position:
+    full_adress_places = []
+    for coord, full_adress in session_flask[user_id]['place_coord']:
         coordinate_places.append(str(coord[0]))
         coordinate_places.append(str(coord[1]))
-
-    full_adress_places = []
-    for _, full_adress in all_places_position:
         full_adress_places.append(full_adress)
 
     route = Route(
         path='/'.join(path_places),
-        distance=session_flask['distance'],
-        enicoding_image=session_flask['enicoding_image'],
+        distance=session_flask[user_id]['distance'],
+        enicoding_image=session_flask[user_id]['enicoding_image'],
         user_id=user.id,
         coordinate_places='/'.join(coordinate_places),
         full_adress_places='/'.join(full_adress_places)
@@ -167,11 +195,14 @@ def savePlace():
 
 @app.route('/resultPath/savePlacePDF')
 def savePlacePDF():
-    full_adress_places = [f'Общее расстояние: {session_flask["distance"]}', 'Полный путь:']
-    for _, full_adress in all_places_position:
+    user_id = session['user_id']
+    
+    full_adress_places = [
+        f'Общее расстояние: {session_flask[user_id]["distance"]}', 'Полный путь:']
+    for _, full_adress in session_flask[user_id]['place_coord']:
         full_adress_places.append(full_adress)
 
-    encoded_image = session_flask['enicoding_image']
+    encoded_image = session_flask[user_id]['enicoding_image']
     text = '\n'.join(full_adress_places)
     print('---------------', text)
 
@@ -288,12 +319,12 @@ def showPlaces():
 
     routs = db_sess.query(Route).filter(
         user.id == Route.user_id).all()
-    
+
     routs_list = []
     for rout in routs:
         routs_list.append(rout.to_dict(
             only=('distance', 'full_adress_places', 'enicoding_image')))
-    
+
     return render_template('showPlaces.html', routs_list=routs_list, theme=theme)
 
 # вход пользователя
@@ -343,6 +374,11 @@ def reqister():
         return redirect('/login')
 
     return render_template('register.html', title='Регистрация', form=form, theme=theme)
+
+
+@app.before_request
+def make_ssesion_permanent():
+    session.permanent = True
 
 
 @app.route('/logout')
